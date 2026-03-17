@@ -2,7 +2,7 @@ import unittest
 
 from unittest import TestCase
 
-from src.tree import Tree
+from ..src.tree import Tree
 
 
 class TestTree(TestCase):

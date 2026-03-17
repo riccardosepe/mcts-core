@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.special import softmax
 
-from src.tree.tree import Tree, Node
+from ..tree.tree import Tree, Node
 
 def ucb(node, parent, c=np.sqrt(2)):
     """

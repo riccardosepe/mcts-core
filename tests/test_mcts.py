@@ -1,8 +1,8 @@
 from unittest import TestCase
 import unittest
 
-from src.ai import MCTS
-from envs import TicTacToeEnv
+from ..src.ai import MCTS
+from ..envs.tic_tac_toe import TicTacToeEnv
 
 
 class TestMCTS(TestCase):

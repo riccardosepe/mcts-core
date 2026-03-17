@@ -9,8 +9,8 @@ from functools import cmp_to_key
 import numpy as np
 from tqdm import tqdm
 
-from src.tree.chance_tree import ChanceNode
-from src.tree import Tree, Node
+from ..tree.chance_tree import ChanceNode
+from ..tree import Tree, Node
 
 
 class MCTS:

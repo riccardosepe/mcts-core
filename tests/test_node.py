@@ -1,6 +1,6 @@
 import unittest
 
-from src.tree import Node
+from ..src.tree import Node
 from unittest import TestCase
 
 

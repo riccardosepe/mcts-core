@@ -2,8 +2,8 @@ import random
 
 import numpy as np
 
-from src.tree.tree import Tree, Node
-from src.ai.mcts import MCTS
+from ..tree.tree import Tree, Node
+from ..ai.mcts import MCTS
 
 class VMCTS(MCTS):
     def _build_tree(self):

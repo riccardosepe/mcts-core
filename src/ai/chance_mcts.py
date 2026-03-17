@@ -1,5 +1,5 @@
-from src.ai import MCTS
-from src.tree.chance_tree import ChanceTree, ChoiceNode, ChanceNode
+from libs.mcts.src.ai import MCTS
+from libs.mcts.src.tree import ChanceTree, ChoiceNode, ChanceNode
 
 
 class ChanceMCTS(MCTS):
