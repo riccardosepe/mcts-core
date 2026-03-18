@@ -6,7 +6,8 @@ from functools import cmp_to_key
 
 import numpy as np
 
-from .tree_visualizer import TreeVisualizer, InteractiveTreeVisualizer
+from .tree_visualizer import InteractiveTreeVisualizer
+
 
 class Node:
     def __init__(self, parent_node, _id, legal_actions, game_data, action):

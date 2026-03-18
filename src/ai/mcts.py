@@ -9,7 +9,6 @@ from functools import cmp_to_key
 import numpy as np
 from tqdm import tqdm
 
-from ..tree.chance_tree import ChanceNode
 from ..tree import Tree, Node
 
 
@@ -251,7 +250,7 @@ class MCTS:
         #  terminal state during the expansion phase
 
         # TODO: IS THIS THE BETTER WAY TO ACHIEVE THIS?
-        if isinstance(selected_node, ChanceNode) or not selected_node.is_terminal:
+        if not selected_node.is_terminal:
             # 2. EXPAND
             expanded_node = self._expand(selected_node, selected_action)
             terminal_node = expanded_node
@@ -328,8 +327,6 @@ class MCTS:
         if explain:
             assert self._explainer is not None
         explanation = None
-        if isinstance(self.tree.root, ChanceNode):
-            raise RuntimeError
         best_child = self._plan(iterations_budget=iterations_budget, time_budget=time_budget)
         best_action = best_child.action
         if explain:
