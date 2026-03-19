@@ -3,6 +3,10 @@ from itertools import permutations
 from gymnasium import spaces, Env
 
 
+# Define constants
+WHITE = 1
+BLACK = 2
+
 
 class TicTacToeEnv(Env):
     metadata = {'render.modes': ['human']}
@@ -38,6 +42,8 @@ class TicTacToeEnv(Env):
         self._la = None
         self.mark = None
         self.t = None
+        self.agent_color = None
+        self.human_color = None
 
     def __str__(self):
         s = ''
@@ -71,21 +77,25 @@ class TicTacToeEnv(Env):
     def reset(self, **kwargs):
         if 'seed' in kwargs:
             super(TicTacToeEnv, self).reset(seed=kwargs['seed'])
-        assert 'human_first' in kwargs
-        human_first = kwargs['human_first']
+        assert 'agent_color' in kwargs
+        agent_color = kwargs['agent_color']
+
+        self.agent_color = agent_color
+        self.human_color = BLACK if agent_color == WHITE else WHITE
 
         self.board = [0] * self._size
         self.done = False
         self._la = None
         self.t = 0
 
-        # The idea here is to know who is the first player to place a piece on the board. If the first player is human,
-        # the first symbol is going to be `O`
+        # The idea here is to know who is the first player to place a piece on the board.
+        # If the agent is WHITE (first player), agent goes first with 'X'
+        # If the agent is BLACK (second player), human goes first with 'O'
 
-        if human_first:
-            self.mark = self._human_mark
-        else:
+        if agent_color == WHITE:
             self.mark = self._agent_mark
+        else:
+            self.mark = self._human_mark
 
 
         return self.observation
@@ -184,7 +194,7 @@ class TicTacToeEnv(Env):
 
 def main():
     env = TicTacToeEnv()
-    env.reset(human_first=True)
+    env.reset(agent_color=WHITE)
     env.render()
 
     done = False

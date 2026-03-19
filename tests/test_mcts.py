@@ -4,13 +4,17 @@ import unittest
 from ..src.ai import MCTS
 from ..envs.tic_tac_toe import TicTacToeEnv
 
+# Define constants
+WHITE = 1
+BLACK = 2
+
 
 class TestMCTS(TestCase):
 
     def _test_counter_opponent_1(self, seed):
         env = TicTacToeEnv()
 
-        env.reset(human_first=True, seed=seed)
+        env.reset(agent_color=WHITE, seed=seed)
 
         # build the following grid
         # O| |O
@@ -48,7 +52,7 @@ class TestMCTS(TestCase):
 
     def _test_win_1(self):
         env = TicTacToeEnv()
-        env.reset(human_first=True, seed=0)
+        env.reset(agent_color=WHITE, seed=0)
 
         # build the following grid
         # O|O|X
