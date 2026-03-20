@@ -9,13 +9,13 @@ from functools import cmp_to_key
 import numpy as np
 from tqdm import tqdm
 
-from ..tree.chance_tree import ChanceNode
 from ..tree import Tree, Node
+from ..tree.chance_tree import ChanceNode
 
 
 class MCTS:
     # Add 2 visits and 1 victory to get average value
-    DUMMY_NODE = Node.construct_dummy_node(score=1, visits=2)
+    DUMMY_NODE = Node.construct_dummy_node(score=0, visits=1)
 
     def __init__(self,
                  transition_model,
@@ -167,7 +167,7 @@ class MCTS:
             _, r, d, _, _ = self.transition_model.step(action)
             # sparse / non-sparse setting
             # in sparse setting, non-terminal rewards are 0
-            ret =+ r * self.gamma
+            ret = + r * self.gamma
             self.t += 1
             if self.transition_model.t >= self._max_depth:
                 # TODO: handle this better
@@ -186,25 +186,23 @@ class MCTS:
             node_state = leaf_node.game_state
             node_time = leaf_node.time
             terminal_reward = leaf_node.game_reward
-            features =  self._evaluator.evaluate(node_state, node_time, terminal_reward=terminal_reward)
+            features = self._evaluator.evaluate(node_state, node_time, terminal_reward=terminal_reward)
 
             v_hat = features.pop('value')
 
-            value = (v_hat + terminal_reward + 1) / 2
-            # perform the same operation on the individual features, so that their sum is actually equal to the backpropagated value
-            total_features = sum(v.size for v in features.values())
-            x = 1 / total_features
-            features = {k: (v + x) / 2 for k, v in features.items()}
+            # prepend terminal_reward as the first (reward) entry of the feature vector,
+            # per the factored return formulation: G = [r_1, ..., r_N, h_1, ..., h_M]
+            features['features'] = np.concatenate([[terminal_reward], features['features']])
+
+            value = features['features'].sum()
 
             if self.adversarial and leaf_node.player == 'Agent':
-                value = 1-value
-                num_features = sum(v.size for v in features.values())
-                features = {k: 1/num_features - v for k, v in features.items()}
+                value = -value
+                features = {k: -v for k, v in features.items()}
 
             leaf_node.features = features
 
         return value
-
 
     def _backpropagate_iter(self, node, score):
         while node is not None:
@@ -226,9 +224,9 @@ class MCTS:
             #  Update the features of the subtree of the node based on the newly added terminal node's features
             node.update_subtree_features(terminal_node_features)
         if self.adversarial:
-            new_score = 1-score
+            new_score = 1 - score
             num_features = sum(v.size for v in terminal_node_features.values())
-            terminal_node_features = {k: 1/num_features - v for k, v in terminal_node_features.items()}
+            terminal_node_features = {k: 1 / num_features - v for k, v in terminal_node_features.items()}
         else:
             # sparse / non-sparse setting
             # in sparse setting, non-terminal rewards are 0
@@ -363,22 +361,26 @@ class MCTS:
         :param node: the node for which it calculates the UCB
         :param parent: the parent node of `node`
         :param c: the coefficient of the formula
+        :return: (exploitation, exploration) tuple, both in [-1, 1] space
         """
-
         exploitation = node.score / node.visits
         if parent.visits == 0:
             exploration = 0
         else:
-            exploration = np.sqrt(
-                np.log(parent.visits) / node.visits
-            )
-        return exploitation + c * exploration
+            exploration = c * np.sqrt(np.log(parent.visits) / node.visits)
+        return exploitation, exploration
 
     def select_ucb(self, parent):
         # randomize the children list to allow random tie breaks
         children = list(parent.children.items())
         random.shuffle(children)
-        scores = [(idx, MCTS.uct(node if node else self.DUMMY_NODE, parent, self.exploration_constant)) for idx, node in children]
+
+        def ucb_score(node):
+            exploitation, exploration = MCTS.uct(node, parent, self.exploration_constant)
+            # rescale exploitation from [-1, 1] to [0, 1] here, at the topmost level
+            return (exploitation + 1) / 2 + exploration
+
+        scores = [(idx, ucb_score(node if node else self.DUMMY_NODE)) for idx, node in children]
 
         best_action = max(scores, key=lambda x: x[1])[0]
         if parent.children[best_action] is not None:
