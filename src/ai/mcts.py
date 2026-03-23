@@ -372,7 +372,6 @@ class MCTS:
         return exploitation, exploration
 
     def select_ucb(self, parent):
-        # randomize the children list to allow random tie breaks
         children = list(parent.children.items())
         random.shuffle(children)
 
@@ -381,9 +380,13 @@ class MCTS:
             # rescale exploitation from [-1, 1] to [0, 1] here, at the topmost level
             return (exploitation + 1) / 2 + exploration
 
-        scores = [(idx, ucb_score(node if node else self.DUMMY_NODE)) for idx, node in children]
+        scores = [(idx, ucb_score(node if node else self.DUMMY_NODE)) for idx, node in
+                  children]
 
-        best_action = max(scores, key=lambda x: x[1])[0]
+        max_score = max(s for _, s in scores)
+        epsilon = abs(max_score) * 1e-10
+        best_candidates = [idx for idx, s in scores if abs(s - max_score) <= epsilon]
+        best_action = random.choice(best_candidates)
         if parent.children[best_action] is not None:
             child = parent.children[best_action]
         else:
