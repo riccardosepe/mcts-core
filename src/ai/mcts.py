@@ -15,7 +15,7 @@ from ..tree.chance_tree import ChanceNode
 
 class MCTS:
     # Add 2 visits and 1 victory to get average value
-    DUMMY_NODE = Node.construct_dummy_node(score=0, visits=1)
+    DUMMY_NODE = Node.construct_dummy_node(score=1, visits=2)
 
     def __init__(self,
                  transition_model,
