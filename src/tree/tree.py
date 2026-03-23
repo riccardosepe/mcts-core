@@ -71,13 +71,10 @@ class Node:
     @property
     def q_vector(self):
         features = self.subtree_features
-        if features is None:
+        if features is None or len(features) == 0:
             return None
-        components_means = []
-        for f in features:
-            components_means.append(f.mean(axis=0))
-        q1 = np.concatenate([*components_means])
-        return q1
+        q = np.array(features, dtype=np.float64).mean(axis=0)
+        return q
 
     def random_action(self):
         action = random.choice(self._available_actions)
@@ -123,7 +120,7 @@ class Node:
     def subtree_features(self):
         if len(self._subtree_features) == 0:
             return None
-        return list(map(np.array, zip(*self._subtree_features)))
+        return self._subtree_features
 
     @property
     def occupancy_frequency(self):
@@ -215,8 +212,8 @@ class Node:
     @property
     def game_reward(self):
         if self.is_root and self._game_data['reward'] is None:
-            return 0
-        return self._game_data['reward']
+            return np.array(0)
+        return np.array(self._game_data['reward'])
 
     @property
     def game_state(self):
