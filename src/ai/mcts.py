@@ -188,17 +188,17 @@ class MCTS:
             terminal_reward = leaf_node.game_reward
             features = self._evaluator.evaluate(node_state, node_time, terminal_reward=terminal_reward)
 
-            v_hat = features.pop('value')
-
-            # prepend terminal_reward as the first (reward) entry of the feature vector,
-            # per the factored return formulation: G = [r_1, ..., r_N, h_1, ..., h_M]
-            features['features'] = np.concatenate([[terminal_reward], features['features']])
-
-            value = features['features'].sum()
+            # features is a 1D array: [terminal_reward_component, h_1, ..., h_M]
+            features = np.concatenate((np.atleast_1d(terminal_reward), features))
+            # value == features.sum() by construction (reward slot + heuristic slots)
+            D = features.size
+            value = (features.sum() + 1) / 2
+            # shift and rescale each entry so that features.sum() == value
+            features = (features + 1 / D) / 2
 
             if self.adversarial and leaf_node.player == 'Agent':
-                value = -value
-                features = {k: -v for k, v in features.items()}
+                value = 1 - value
+                features = 1 / D - features
 
             leaf_node.features = features
 
@@ -225,8 +225,9 @@ class MCTS:
             node.update_subtree_features(terminal_node_features)
         if self.adversarial:
             new_score = 1 - score
-            num_features = sum(v.size for v in terminal_node_features.values())
-            terminal_node_features = {k: 1 / num_features - v for k, v in terminal_node_features.items()}
+            if self._evaluator is not None:
+                D = terminal_node_features.size
+                terminal_node_features =  1 / D - terminal_node_features
         else:
             # sparse / non-sparse setting
             # in sparse setting, non-terminal rewards are 0
