@@ -368,19 +368,15 @@ class MCTS:
         if parent.visits == 0:
             exploration = 0
         else:
-            exploration = c * np.sqrt(np.log(parent.visits) / node.visits)
-        return exploitation, exploration
+            exploration = np.sqrt(
+                np.log(parent.visits) / node.visits
+            )
+        return exploitation + c * exploration
 
     def select_ucb(self, parent):
         children = list(parent.children.items())
         random.shuffle(children)
-
-        def ucb_score(node):
-            exploitation, exploration = MCTS.uct(node, parent, self.exploration_constant)
-            # rescale exploitation from [-1, 1] to [0, 1] here, at the topmost level
-            return (exploitation + 1) / 2 + exploration
-
-        scores = [(idx, ucb_score(node if node else self.DUMMY_NODE)) for idx, node in
+        scores = [(idx, MCTS.uct(node if node else self.DUMMY_NODE, parent, self.exploration_constant)) for idx, node in
                   children]
 
         max_score = max(s for _, s in scores)
